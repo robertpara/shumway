@@ -27,31 +27,32 @@ function renderDisplayObject(child, ctx, transform, cxform, clip) {
 
       var subpaths = graphics._subpaths;
       for (var j = 0, o = subpaths.length; j < o; j++) {
-        var pathTracker = subpaths[j], path = pathTracker.target;
+        var path = subpaths[j];
         if (clip) {
-          ctx.closePath();
-          ctx.__draw__(path);
+          ctx.addPath(path);
         } else {
-          if (path.fillStyle) {
-            ctx.fillStyle = path.fillStyle;
-            if (path.fillTransform) {
-              var m = path.fillTransform;
-              ctx.beginPath();
-              ctx.__draw__(path);
+          ctx.currentPath = path;
+
+          var fill = path.fillStyle;
+          if (fill) {
+            ctx.fillStyle = fill;
+            var m = fill.currentTransform;
+            if (m) {
               ctx.save();
-              ctx.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+              ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f);
               ctx.fill();
               ctx.restore();
             } else {
-              ctx.fill(path);
+              ctx.fill();
             }
           }
+
           if (path.strokeStyle) {
             ctx.strokeStyle = path.strokeStyle;
-            var drawingStyles = pathTracker.drawingStyles;
+            var drawingStyles = path.drawingStyles;
             for (var prop in drawingStyles)
               ctx[prop] = drawingStyles[prop];
-            ctx.stroke(path);
+            ctx.stroke();
           }
         }
       }

@@ -17,6 +17,8 @@ var DisplayObjectDefinition = (function () {
   var BLEND_MODE_SHADER     = 'shader';
   var BLEND_MODE_SUBTRACT   = 'subtract';
 
+  var hitContext = document.createElement('canvas').getContext('kanvas-2d');
+
   var def = {
     __class__: 'flash.display.DisplayObject',
 
@@ -145,44 +147,12 @@ var DisplayObjectDefinition = (function () {
               pt.y /= scale;
             }
 
-            var hitCtx = this._graphics._hitCtx;
-
-            if (hitCtx.isPointInPath(pt.x, pt.y))
-              return true;
-
             var subpaths = this._graphics._subpaths;
             for (var i = 0, n = subpaths.length; i < n; i++) {
-              var pathTracker = subpaths[i];
-              var path = pathTracker.target;
-
-              if (!path.strokeStyle)
-                continue;
-
-              var drawingStyles = pathTracker.drawingStyles;
-              if (hitCtx.mozIsPointInStroke) {
-                hitCtx.strokeStyle = path.strokeStyle;
-                for (var prop in drawingStyles)
-                  hitCtx[prop] = drawingStyles[prop];
-
-                if (hitCtx.mozIsPointInStroke(pt.x, pt.y))
-                  return true;
-              } else {
-                var strokeHitCtx = path._strokeHitContext;
-                if (!strokeHitCtx) {
-                  var strokeHitCanvas = hitCtx.canvas.cloneNode();
-                  strokeHitCtx = strokeHitCanvas.getContext('2d');
-                  path._strokeHitContext = strokeHitCtx;
-                  pathTracker.strokeToPath(strokeHitCtx, {
-                    strokeWidth: drawingStyles.lineWidth,
-                    startCap: drawingStyles.lineCap,
-                    endCap: drawingStyles.lineCap,
-                    join: drawingStyles.lineJoin,
-                    miterLimit: drawingStyles.miterLimit
-                  });
-                }
-                if (strokeHitCtx.isPointInPath(pt.x, pt.y))
-                  return true;
-              }
+              var path = subpaths[i];
+              hitContext.currentPath = path;
+              if (hitContext.isPointInPath(pt.x, pt.y))
+                return true;
             }
           }
 
